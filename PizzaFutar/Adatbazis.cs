@@ -5,87 +5,117 @@ using System.Text;
 
 namespace PizzaFutar
 {
+
     internal class Adatbazis
     {
+
         private readonly string connectionString;
 
         public Adatbazis()
         {
             this.connectionString = "server=localhost;database=pizzafutár;user=root;password='';";
         }
+
         public List<Rendeles> Feltolt()
+
         {
-            List< Rendeles > lista = new List<Rendeles>();
+
+            List<Rendeles> lista = new List<Rendeles>();
             Dictionary<int, Pizza> pizzak = new Dictionary<int, Pizza>();
             Dictionary<int, Cim> cimek = new Dictionary<int, Cim>();
+
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(connectionString))
+
+                using (MySqlConnection conn = new MySqlConnection(this.connectionString))
                 {
-                    connection.Open();
-                    Console.WriteLine("Az adatbázis felépült");
+                    conn.Open();
+                    Console.WriteLine("Sikeres kapcsolódás az adatbázishoz!");
                     string query = "SELECT * FROM pizza";
-                    using(MySqlCommand command = new MySqlCommand(query, connection))
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        using (MySqlDataReader reader = command.ExecuteReader())
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
                         {
+
                             while (reader.Read())
                             {
+
                                 int id = reader.GetInt32("id");
-                                string nev = reader.GetString("nev");
-                                int meret = reader.GetInt32("meret");
-                                int ar = reader.GetInt32("ar");
-                                Pizza pizza = new Pizza(id, nev, meret, ar);
-                                pizzak.Add(id, pizza);
+                                Pizza pizza = new Pizza(
+                                    id,
+                                    reader.GetString("nev"),
+                                    reader.GetInt32("meret"),
+                                    reader.GetInt32("ar")
+                                    );
+
+                                pizzak[id] = pizza;
                             }
                         }
                     }
+
                     query = "SELECT * FROM cim";
-                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        using (MySqlDataReader reader = command.ExecuteReader())
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
                         {
+
                             while (reader.Read())
                             {
+
                                 int id = reader.GetInt32("id");
-                                string nev = reader.GetString("nev");
-                                string utca = reader.GetString("utca");
-                                string hsz = reader.GetString("hsz");
-                                Cim cim = new Cim(id, nev, utca, hsz);
-                                cimek.Add(id, cim);
+                                Cim cim = new Cim(
+                                    id,
+                                    reader.GetString("nev"),
+                                    reader.GetString("utca"),
+                                    reader.GetString("hsz")
+                                    );
+
+                                cimek[id] = cim;
                             }
                         }
                     }
+
                     query = "SELECT * FROM rendeles";
-                    using(MySqlCommand command = new MySqlCommand(query, connection))
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        using (MySqlDataReader reader = command.ExecuteReader())
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
                         {
+
                             while (reader.Read())
                             {
+
                                 int id = reader.GetInt32("id");
-                                int pizzaId = reader.GetInt32("pizzaid");
+                                Pizza p = pizzak[reader.GetInt32("pizzaid")];
+                                Cim c = cimek[reader.GetInt32("cimid")];
                                 int db = reader.GetInt32("darab");
-                                int cimId = reader.GetInt32("cimid");
-                                TimeSpan ido = reader.GetTimeSpan("szallitas");
-                                Pizza pizza = pizzak[pizzaId];
-                                Cim cim = cimek[cimId];
-                                Rendeles rendeles = new Rendeles(id, pizza, db, cim, ido);
-                                lista.Add(rendeles);
+                                TimeSpan t = reader.GetTimeSpan("szallitas");
+                                lista.Add(new Rendeles(id, p, db, c, t));
+
                             }
                         }
                     }
+
                 }
+
             }
-            catch (Exception ex)
+
+            catch (MySqlException ex)
             {
-                Console.WriteLine("Hiba az adatbázis kapcsolódásban" + ex);
+                Console.WriteLine("hiba az afatbaziskapcsolattal");
+                Environment.Exit(0);
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                Console.WriteLine("Hiba az adatbázis kapcsolódásban" + ex);
+                Console.WriteLine("Általános hiba:" + e);
+                Environment.Exit(0);
+
             }
+
+            Console.WriteLine(pizzak[1]);
+            Console.WriteLine(cimek[1]);
             return lista;
         }
+
     }
+
 }

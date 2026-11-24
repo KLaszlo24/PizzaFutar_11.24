@@ -4,7 +4,12 @@
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Feladatok feladatok = new Feladatok();
+            feladatok.Futtat();
+
+            Console.WriteLine("\nA program futása befejeződött.");
+            Console.ReadKey();
         }
     }
 }
